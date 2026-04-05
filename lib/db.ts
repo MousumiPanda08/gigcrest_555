@@ -1,38 +1,24 @@
 // lib/db.ts
-// Vercel KV-based database utility
-// Drop-in replacement — same function names, same signatures
-// Only use in API routes (server-side) — NEVER in client components
-
 import { kv } from '@vercel/kv';
 
 /**
- * Read all records from a key
+ * Read all records from KV
  * Returns empty array if key doesn't exist
  */
 export async function readData<T>(filename: string): Promise<T[]> {
-  try {
-    const data = await kv.get<T[]>(filename);
-    return data ?? [];
-  } catch (error) {
-    console.error(`Error reading ${filename}:`, error);
-    return [];
-  }
+  const data = await kv.get<T[]>(filename);
+  return data ?? [];
 }
 
 /**
- * Write entire array to a key (overwrites)
+ * Write entire array to KV (overwrites)
  */
 export async function writeData<T>(filename: string, data: T[]): Promise<void> {
-  try {
-    await kv.set(filename, data);
-  } catch (error) {
-    console.error(`Error writing ${filename}:`, error);
-    throw new Error(`Failed to write to ${filename}`);
-  }
+  await kv.set(filename, data);
 }
 
 /**
- * Append a single item to a key
+ * Append a single item to a KV key
  */
 export async function appendData<T>(filename: string, item: T): Promise<void> {
   const data = await readData<T>(filename);
@@ -53,7 +39,6 @@ export async function findById<T extends { id: string }>(
 
 /**
  * Update a record by ID with partial data
- * Returns updated record or null if not found
  */
 export async function updateById<T extends { id: string }>(
   filename: string,
@@ -72,7 +57,6 @@ export async function updateById<T extends { id: string }>(
 
 /**
  * Delete a record by ID
- * Returns true if deleted, false if not found
  */
 export async function deleteById<T extends { id: string }>(
   filename: string,
@@ -99,7 +83,7 @@ export async function filterData<T>(
 }
 
 /**
- * Count records, optionally with a filter
+ * Count records
  */
 export async function countData<T>(
   filename: string,
