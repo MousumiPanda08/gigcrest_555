@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Users, ShieldCheck, FileText, DollarSign, AlertTriangle, CloudRain } from 'lucide-react';
-import { useWindowSize } from '@/hooks/useWindowSize';
+import { useWindowSize } from '@/components/hooks/useWindowSize';
 import { adminData } from '@/lib/data';
 import StatCard from '@/components/shared/StatCard';
 

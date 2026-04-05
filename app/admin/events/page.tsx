@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { useWindowSize } from '@/hooks/useWindowSize';
+import { useWindowSize } from '@/components/hooks/useWindowSize';
 import { CloudRain } from 'lucide-react';
 import { adminData } from '@/lib/data';
 
