@@ -7,7 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X, User, Calendar, MapPin, DollarSign, Shield, AlertTriangle } from 'lucide-react';
 import { Claim } from '@/types';
-
+const getFraudBarColor = (score: number) => {
+  if (score <= 20) return 'bg-green-500';
+  if (score <= 45) return 'bg-yellow-500';
+  if (score <= 70) return 'bg-orange-500';
+  return 'bg-red-500';
+};
 interface ClaimDetailModalProps {
   claim: Claim | null;
   onClose: () => void;
@@ -161,20 +166,19 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
             </div>
             
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-gray-700">Risk Score</span>
-              <div className="flex items-center gap-2">
-                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${status.bg} transition-all`}
-                    style={{ width: `${claim.fraudScore}%` }}
-                  ></div>
-                </div>
-                <span className={`text-lg font-bold ${fraudLevel.color}`}>
-                  {claim.fraudScore}/100
-                </span>
-              </div>
-            </div>
-
+  <span className="text-sm font-semibold text-gray-700">Risk Score</span>
+  <div className="flex items-center gap-2">
+    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div
+        className={`h-full ${getFraudBarColor(claim.fraudScore)} transition-all`}
+        style={{ width: `${claim.fraudScore}%` }}
+      ></div>
+    </div>
+    <span className={`text-lg font-bold ${fraudLevel.color}`}>
+      {claim.fraudScore}/100
+    </span>
+  </div>
+</div>
             <div className="bg-white p-3 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-gray-700">Assessment:</span>

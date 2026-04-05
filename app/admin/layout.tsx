@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Shield, Menu, X, BarChart3, Activity, AlertTriangle, Users, FileText, Settings, LogOut } from 'lucide-react';
-import { useWindowSize } from '@/hooks/useWindowSize';
+import { useWindowSize } from '@/components/hooks/useWindowSize';
 import NavButton from '@/components/shared/NavButton';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

@@ -1,24 +1,19 @@
-// app/api/workers/route.ts
-// GET  /api/workers — List all workers (with optional filters)
-// POST /api/workers — Create a new worker
-
 import { NextRequest, NextResponse } from 'next/server';
 import { readData, appendData, existsByField } from '@/lib/db';
 import { generateId } from '@/lib/id-generator';
-import { Worker, ApiResponse } from '@/types';
+import type { Worker, ApiResponse } from '@/types';
 
-// GET — List all workers with optional filters
+// GET — List workers
 export async function GET(request: NextRequest) {
   try {
     const workers = readData<Worker>('workers.json');
 
-    // Parse query parameters for filtering
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city');
     const zoneId = searchParams.get('zoneId');
     const platform = searchParams.get('platform');
     const isActive = searchParams.get('isActive');
-    const search = searchParams.get('search'); // search by name or phone
+    const search = searchParams.get('search');
 
     let filtered = workers;
 
@@ -27,15 +22,23 @@ export async function GET(request: NextRequest) {
         (w) => w.city.toLowerCase() === city.toLowerCase()
       );
     }
+
     if (zoneId) {
       filtered = filtered.filter((w) => w.primaryZoneId === zoneId);
     }
+
     if (platform) {
-      filtered = filtered.filter((w) => w.platform === platform);
+      filtered = filtered.filter(
+        (w) => w.deliveryPlatform === platform
+      );
     }
+
     if (isActive !== null && isActive !== undefined) {
-      filtered = filtered.filter((w) => w.isActive === (isActive === 'true'));
+      filtered = filtered.filter(
+        (w) => w.isActive === (isActive === 'true')
+      );
     }
+
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(
@@ -45,14 +48,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Don't expose password hashes in list view
-    const safe = filtered.map(({ passwordHash, ...rest }) => rest);
-
     return NextResponse.json({
       success: true,
       data: {
-        workers: safe,
-        total: safe.length,
+        workers: filtered,
+        total: filtered.length,
       },
     } as ApiResponse);
   } catch (error) {
@@ -64,27 +64,47 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST — Create a new worker
+// POST — Create worker
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Basic validation
-    const { name, phone, city, platform, vehicleType, primaryZoneId } = body;
-    if (!name || !phone || !city || !platform || !vehicleType || !primaryZoneId) {
+    const {
+      name,
+      phone,
+      city,
+      deliveryPlatform,
+      vehicleType,
+      primaryZoneId,
+      avgDailyEarning,
+      hoursPerDay,
+      daysPerWeek,
+      experienceMonths,
+      upiId
+    } = body;
+
+    if (
+      !name ||
+      !phone ||
+      !city ||
+      !deliveryPlatform ||
+      !vehicleType ||
+      !primaryZoneId ||
+      !upiId
+    ) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Missing required fields: name, phone, city, platform, vehicleType, primaryZoneId',
+          error:
+            'Missing required fields: name, phone, city, deliveryPlatform, vehicleType, primaryZoneId, upiId',
         },
         { status: 400 }
       );
     }
 
-    // Check for duplicate phone number
     if (existsByField<Worker>('workers.json', 'phone', phone)) {
       return NextResponse.json(
-        { success: false, error: 'A worker with this phone number already exists' },
+        { success: false, error: 'Phone number already exists' },
         { status: 409 }
       );
     }
@@ -95,36 +115,27 @@ export async function POST(request: NextRequest) {
       id: generateId('worker'),
       name,
       phone,
-      email: body.email || undefined,
       city,
-      platform,
-      vehicleType,
       primaryZoneId,
-      avgDailyEarnings: body.avgDailyEarnings || 750,
-      avgWorkingHoursPerDay: body.avgWorkingHoursPerDay || 10,
-      workingDaysPerWeek: body.workingDaysPerWeek || 6,
-      monthlyIncome: body.monthlyIncome || (body.avgDailyEarnings || 750) * 6 * 4,
-      dependents: body.dependents || 0,
-      education: body.education || '12th',
-      language: body.language || 'Hindi',
-      profileScore: 70, // new workers start at 70
-      totalClaims: 0,
-      totalPayouts: 0,
-      joinedAt: now,
-      isActive: true,
+      deliveryPlatform,
+      vehicleType,
+      avgDailyEarning: avgDailyEarning || 750,
+      hoursPerDay: hoursPerDay || 8,
+      daysPerWeek: daysPerWeek || 6,
+      experienceMonths: experienceMonths || 12,
+      upiId,
       createdAt: now,
       updatedAt: now,
+      isActive: true,
+      totalPayouts: 0
     };
 
     appendData('workers.json', newWorker);
 
-    // Remove passwordHash before returning
-    const { passwordHash, ...safeWorker } = newWorker;
-
     return NextResponse.json(
       {
         success: true,
-        data: { worker: safeWorker },
+        data: { worker: newWorker },
         message: 'Worker created successfully',
       },
       { status: 201 }

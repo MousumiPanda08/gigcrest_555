@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { DollarSign, ShieldCheck, FileText, TrendingUp } from 'lucide-react';
-import { useWindowSize } from '@/hooks/useWindowSize';
+import { useWindowSize } from '@/components/hooks/useWindowSize';
 import { workerData } from '@/lib/data';
 import StatCard from '@/components/shared/StatCard';
 

@@ -1,9 +1,9 @@
-// components/maps/ZoneRiskMap.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
-import { Zone, DisruptionEvent, WeatherData } from '@/types';
+import { Button } from '@/components/ui/button';
+import type { Zone, DisruptionEvent, WeatherData } from '@/types';
 import 'leaflet/dist/leaflet.css';
 
 interface ZoneMarkerProps {
@@ -15,13 +15,11 @@ interface ZoneMarkerProps {
 const ZoneMarker: React.FC<ZoneMarkerProps> = ({ zone, activeEvent, weather }) => {
   const getColor = () => {
     if (!activeEvent) {
-      if (zone.riskLevel === 'very_high') return '#ef4444';
       if (zone.riskLevel === 'high') return '#f97316';
       if (zone.riskLevel === 'medium') return '#eab308';
       return '#22c55e';
     }
-    
-    // Active event coloring
+
     if (activeEvent.severityTier === 'T4') return '#dc2626';
     if (activeEvent.severityTier === 'T3') return '#f97316';
     if (activeEvent.severityTier === 'T2') return '#eab308';
@@ -29,36 +27,35 @@ const ZoneMarker: React.FC<ZoneMarkerProps> = ({ zone, activeEvent, weather }) =
   };
 
   const color = getColor();
-  const radius = zone.radius / 100; // Scale down for map
+  const radius = zone.radius / 100;
 
   return (
     <CircleMarker
-      center={[zone.latitude, zone.longitude]}
+      center={[zone.coordinates.lat, zone.coordinates.lng]}
       radius={Math.max(radius, 8)}
       pathOptions={{
-        color: color,
+        color,
         fillColor: color,
         fillOpacity: activeEvent ? 0.6 : 0.4,
         weight: 2
       }}
-      className={activeEvent ? 'animate-pulse' : ''}
     >
       <Popup>
         <div className="min-w-[200px]">
           <h3 className="font-bold text-base mb-2">{zone.name}</h3>
           <p className="text-sm text-gray-600 mb-3">{zone.city}</p>
-          
+
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Risk Level:</span>
               <span className="font-semibold capitalize" style={{ color }}>
-                {zone.riskLevel.replace('_', ' ')}
+                {zone.riskLevel}
               </span>
             </div>
-            
+
             <div className="flex justify-between">
               <span className="text-gray-600">Multiplier:</span>
-              <span className="font-semibold">{zone.riskMultiplier}x</span>
+              <span className="font-semibold">{zone.basePremiumFactor}x</span>
             </div>
           </div>
 
@@ -77,7 +74,7 @@ const ZoneMarker: React.FC<ZoneMarkerProps> = ({ zone, activeEvent, weather }) =
           {activeEvent && (
             <div className="mt-3 pt-3 border-t bg-red-50 -mx-3 -mb-3 p-3 rounded-b">
               <p className="text-xs font-bold text-red-800 mb-2">
-                ⚠️ ACTIVE EVENT: {activeEvent.eventType.replace('_', ' ').toUpperCase()}
+                ⚠️ ACTIVE EVENT: {String(activeEvent.eventType).replace('_', ' ').toUpperCase()}
               </p>
               <div className="text-xs space-y-1">
                 <div className="flex justify-between">
@@ -109,16 +106,17 @@ interface MapControlsProps {
 
 const MapControls: React.FC<MapControlsProps> = ({ onCityChange }) => {
   const cities = [
-    { name: 'Mumbai', lat: 19.0760, lng: 72.8777, zoom: 12 },
-    { name: 'Delhi', lat: 28.6139, lng: 77.2090, zoom: 12 },
+    { name: 'Mumbai', lat: 19.076, lng: 72.8777, zoom: 12 },
+    { name: 'Delhi', lat: 28.6139, lng: 77.209, zoom: 12 },
     { name: 'Bangalore', lat: 12.9716, lng: 77.5946, zoom: 12 }
   ];
 
   return (
     <div className="absolute top-4 right-4 z-[1000] flex gap-2">
-      {cities.map(city => (
+      {cities.map((city) => (
         <Button
           key={city.name}
+          type="button"
           onClick={() => onCityChange(city.name, city.lat, city.lng, city.zoom)}
           size="sm"
           variant="secondary"
@@ -133,11 +131,11 @@ const MapControls: React.FC<MapControlsProps> = ({ onCityChange }) => {
 
 const MapUpdater: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
   const map = useMap();
-  
+
   useEffect(() => {
     map.setView(center, zoom);
   }, [center, zoom, map]);
-  
+
   return null;
 };
 
@@ -147,15 +145,15 @@ interface ZoneRiskMapProps {
   weather?: WeatherData[];
 }
 
-export const ZoneRiskMap: React.FC<ZoneRiskMapProps> = ({ 
-  zones, 
-  events = [], 
-  weather = [] 
+export const ZoneRiskMap: React.FC<ZoneRiskMapProps> = ({
+  zones,
+  events = [],
+  weather = []
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.5937, 78.9629]);
   const [mapZoom, setMapZoom] = useState(5);
 
-  const handleCityChange = (city: string, lat: number, lng: number, zoom: number) => {
+  const handleCityChange = (_city: string, lat: number, lng: number, zoom: number) => {
     setMapCenter([lat, lng]);
     setMapZoom(zoom);
   };
@@ -172,13 +170,13 @@ export const ZoneRiskMap: React.FC<ZoneRiskMapProps> = ({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
+
         <MapUpdater center={mapCenter} zoom={mapZoom} />
 
-        {zones.map(zone => {
-          const activeEvent = events.find(e => e.zoneId === zone.id && !e.eventEnd);
-          const zoneWeather = weather.find(w => w.zoneId === zone.id);
-          
+        {zones.map((zone) => {
+          const activeEvent = events.find((e) => e.zoneId === zone.id && !e.eventEnd);
+          const zoneWeather = weather.find((w) => w.zoneId === zone.id);
+
           return (
             <ZoneMarker
               key={zone.id}
@@ -192,7 +190,6 @@ export const ZoneRiskMap: React.FC<ZoneRiskMapProps> = ({
 
       <MapControls onCityChange={handleCityChange} />
 
-      {/* Legend */}
       <div className="absolute bottom-4 left-4 z-[1000] bg-white p-3 rounded-lg shadow-lg border border-gray-200">
         <p className="text-xs font-bold text-gray-700 mb-2">Risk Levels</p>
         <div className="space-y-1 text-xs">
@@ -217,3 +214,5 @@ export const ZoneRiskMap: React.FC<ZoneRiskMapProps> = ({
     </div>
   );
 };
+
+export default ZoneRiskMap;

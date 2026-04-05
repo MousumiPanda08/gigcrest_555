@@ -1,48 +1,67 @@
+// components/shared/StatCard.tsx
 'use client';
 
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
-import { useWindowSize } from '@/components/hooks/useWindowSize';
+import { Card } from '@/components/ui/card';
 
 interface StatCardProps {
   icon: LucideIcon;
-  iconBg: string;
-  iconColor: string;
   label: string;
   value: string | number;
+  iconColor?: string;
+  iconBg?: string;
   valueColor?: string;
-  border?: string;
+  footerText?: string;
+  highlight?: boolean;
+  border?: string;   // ✅ ADD THIS
 }
 
-const StatCard: React.FC<StatCardProps> = ({
-  icon, iconBg, iconColor, label, value, valueColor, border
+export const StatCard: React.FC<StatCardProps> = ({
+  icon: Icon,
+  label,
+  value,
+  iconColor = '#2563eb',
+  iconBg = '#dbeafe',
+  valueColor = '#1a1a1a',
+  footerText,
+  highlight = false
 }) => {
-  const { isMobile } = useWindowSize();
-
   return (
-    <div style={{
-      background: 'white', padding: isMobile ? '18px' : '22px', borderRadius: '15px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.05)', display: 'flex', gap: '15px',
-      alignItems: 'center', border: border || 'none'
-    }}>
-      <div style={{
-        width: '48px', height: '48px', borderRadius: '12px', background: iconBg,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-      }}>
-        {React.createElement(icon, { size: 22, color: iconColor })}
-      </div>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>
-          {label}
+    <Card
+      className={`
+        p-5 transition-all
+        ${highlight ? 'border-2 border-red-300 bg-red-50' : ''}
+      `}
+    >
+      <div className="flex items-center gap-4">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: iconBg }}
+        >
+          <Icon size={22} color={iconColor} />
         </div>
-        <div style={{
-          fontSize: isMobile ? '1.3rem' : '1.6rem', fontWeight: 800,
-          color: valueColor || '#1a1a1a'
-        }}>
-          {value}
+
+        <div className="flex-1">
+          <div className="text-xs text-gray-500 mb-1">
+            {label}
+          </div>
+
+          <div
+            className="text-2xl font-bold"
+            style={{ color: valueColor }}
+          >
+            {value}
+          </div>
+
+          {footerText && (
+            <div className="text-xs text-gray-500 mt-1">
+              {footerText}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

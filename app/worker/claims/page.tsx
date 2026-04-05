@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useWindowSize } from '@/hooks/useWindowSize';
+import { useWindowSize } from '@/components/hooks/useWindowSize';
 import { workerData } from '@/lib/data';
 
 export default function ClaimsPage() {

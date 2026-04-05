@@ -1,9 +1,8 @@
-// components/maps/ZonePopup.tsx
 'use client';
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Zone, DisruptionEvent, WeatherData } from '@/types';
+import type { Zone, DisruptionEvent, WeatherData } from '@/types';
 
 interface ZonePopupProps {
   zone: Zone;
@@ -13,20 +12,20 @@ interface ZonePopupProps {
   policyCount?: number;
 }
 
-export const ZonePopup: React.FC<ZonePopupProps> = ({ 
-  zone, 
-  activeEvent, 
+export const ZonePopup: React.FC<ZonePopupProps> = ({
+  zone,
+  activeEvent,
   weather,
   workerCount = 0,
   policyCount = 0
 }) => {
   const getRiskColor = (level: string) => {
     const colors: Record<string, string> = {
-      'low': 'text-green-600',
-      'medium': 'text-yellow-600',
-      'high': 'text-orange-600',
-      'very_high': 'text-red-600'
+      low: 'text-green-600',
+      medium: 'text-yellow-600',
+      high: 'text-orange-600'
     };
+
     return colors[level] || 'text-gray-600';
   };
 
@@ -34,18 +33,18 @@ export const ZonePopup: React.FC<ZonePopupProps> = ({
     <div className="min-w-[220px] p-2">
       <h3 className="font-bold text-base text-gray-900 mb-1">{zone.name}</h3>
       <p className="text-sm text-gray-600 mb-3">{zone.city}</p>
-      
+
       <div className="space-y-2 text-sm mb-3">
         <div className="flex justify-between">
           <span className="text-gray-600">Risk Level:</span>
           <span className={`font-semibold capitalize ${getRiskColor(zone.riskLevel)}`}>
-            {zone.riskLevel.replace('_', ' ')}
+            {zone.riskLevel}
           </span>
         </div>
-        
+
         <div className="flex justify-between">
           <span className="text-gray-600">Multiplier:</span>
-          <span className="font-semibold text-gray-900">{zone.riskMultiplier}x</span>
+          <span className="font-semibold text-gray-900">{zone.basePremiumFactor}x</span>
         </div>
 
         <div className="flex justify-between">
@@ -88,10 +87,10 @@ export const ZonePopup: React.FC<ZonePopupProps> = ({
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             <p className="text-xs font-bold text-red-800 uppercase">
-              Active Event: {activeEvent.eventType.replace('_', ' ')}
+              Active Event: {String(activeEvent.eventType).replace('_', ' ')}
             </p>
           </div>
-          
+
           <div className="text-xs space-y-1">
             <div className="flex justify-between">
               <span className="text-gray-600">Severity:</span>
@@ -115,3 +114,5 @@ export const ZonePopup: React.FC<ZonePopupProps> = ({
     </div>
   );
 };
+
+export default ZonePopup;

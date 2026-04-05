@@ -1,11 +1,9 @@
-// components/worker/PremiumBreakdownCard.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { Policy } from '@/types';
+import type { Policy } from '@/types';
 
 interface PremiumBreakdownCardProps {
   policy: Policy;
@@ -17,6 +15,7 @@ export const PremiumBreakdownCard: React.FC<PremiumBreakdownCardProps> = ({ poli
   return (
     <Card className="mb-4">
       <button
+        type="button"
         onClick={() => setExpanded(!expanded)}
         className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
@@ -40,43 +39,51 @@ export const PremiumBreakdownCard: React.FC<PremiumBreakdownCardProps> = ({ poli
               <span className="text-sm font-semibold text-gray-900">₹{policy.basePremium}</span>
             </div>
 
-            {policy.zoneLoading > 0 && (
+            {(policy.zoneLoading ?? 0) > 0 && (
               <div className="flex justify-between items-center py-2 border-t border-gray-200">
                 <div>
                   <span className="text-sm text-gray-600">Zone Risk Loading</span>
                   <p className="text-xs text-gray-400">Based on your delivery area</p>
                 </div>
-                <span className="text-sm font-semibold text-orange-600">+₹{policy.zoneLoading}</span>
+                <span className="text-sm font-semibold text-orange-600">
+                  +₹{policy.zoneLoading ?? 0}
+                </span>
               </div>
             )}
 
-            {policy.seasonLoading > 0 && (
+            {(policy.seasonLoading ?? 0) > 0 && (
               <div className="flex justify-between items-center py-2 border-t border-gray-200">
                 <div>
                   <span className="text-sm text-gray-600">Season Loading</span>
                   <p className="text-xs text-gray-400">Monsoon/summer adjustment</p>
                 </div>
-                <span className="text-sm font-semibold text-orange-600">+₹{policy.seasonLoading}</span>
+                <span className="text-sm font-semibold text-orange-600">
+                  +₹{policy.seasonLoading ?? 0}
+                </span>
               </div>
             )}
 
-            {policy.platformLoading > 0 && (
+            {(policy.platformLoading ?? 0) > 0 && (
               <div className="flex justify-between items-center py-2 border-t border-gray-200">
                 <div>
                   <span className="text-sm text-gray-600">Platform Loading</span>
                   <p className="text-xs text-gray-400">Full-time worker rate</p>
                 </div>
-                <span className="text-sm font-semibold text-orange-600">+₹{policy.platformLoading}</span>
+                <span className="text-sm font-semibold text-orange-600">
+                  +₹{policy.platformLoading ?? 0}
+                </span>
               </div>
             )}
 
-            {policy.behavioralDiscount > 0 && (
+            {(policy.behavioralDiscount ?? 0) > 0 && (
               <div className="flex justify-between items-center py-2 border-t border-gray-200">
                 <div>
                   <span className="text-sm text-gray-600">Good Behavior Discount 🎉</span>
                   <p className="text-xs text-gray-400">Clean claims history</p>
                 </div>
-                <span className="text-sm font-semibold text-green-600">-₹{policy.behavioralDiscount}</span>
+                <span className="text-sm font-semibold text-green-600">
+                  -₹{policy.behavioralDiscount ?? 0}
+                </span>
               </div>
             )}
 

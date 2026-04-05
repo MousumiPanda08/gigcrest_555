@@ -1,13 +1,9 @@
 export type SeverityTier = 'T1' | 'T2' | 'T3' | 'T4';
-export type EventType = 'rain' | 'flood' | 'heat' | 'aqi' | 'strike' | 'curfew';
-export type ClaimStatus =
-  | "pending"
-  | "under_review"
-  | "approved"
-  | "denied"
-  | "paid";
+export type EventType = 'rain' | 'heavy_rain' | 'flood' | 'heat' | 'extreme_heat' | 'aqi' | 'pollution' | 'strike' | 'curfew';
+export type ClaimStatus = "pending" | "under_review" | "manual_review" | "auto_approved" | "approved" | "denied" | "paid";
 export type PaymentMethod = "upi" | "wallet";
 export type PaymentStatus = "initiated" | "completed" | "failed";
+
 export interface Worker {
   id: string;
   name: string;
@@ -41,6 +37,21 @@ export interface Zone {
   baseRiskScore?: number;
 }
 
+export interface PremiumBreakdown {
+  basePremium: number;
+  zoneLoading: number;
+  seasonLoading: number;
+  platformLoading: number;
+  behavioralDiscount: number;
+  finalPremium: number;
+  coverageDetails: {
+    coveragePercentage: number;
+    maxDailyPayout: number;
+    maxWeeklyPayouts: number;
+    maxMonthlyPayouts: number;
+  };
+}
+
 export interface Policy {
   id: string;
   workerId: string;
@@ -68,6 +79,14 @@ export interface Policy {
   updatedAt?: string;
 }
 
+export interface FraudFlag {
+  type: string;
+  severity?: "low" | "medium" | "high" | "critical";
+  score: number;
+  description: string;
+  evidence?: unknown;
+}
+
 export interface Claim {
   id: string;
   policyId: string;
@@ -79,10 +98,13 @@ export interface Claim {
   severityTier: SeverityTier;
   dailyEarningBasis: number;
   coveragePercentage: number;
+  severityFactor?: number;
+  hoursAffected?: number;
+  hoursRatio?: number;
   calculatedPayout: number;
   approvedPayout: number;
   fraudScore: number;
-  fraudFlags: string[];
+  fraudFlags: FraudFlag[] | string[];
   status: ClaimStatus;
   paymentStatus: "pending" | "completed" | "failed";
   paymentId?: string;
@@ -105,6 +127,7 @@ export interface WeatherData {
   visibility: number;
   timestamp: string;
   source: 'real' | 'simulation';
+  weatherCondition?: string;
 }
 
 export interface DisruptionEvent {
@@ -132,6 +155,7 @@ export interface DisruptionEvent {
 }
 
 export type WeatherEvent = DisruptionEvent;
+
 export interface FraudAlert {
   id: string;
   workerId: string;
@@ -146,15 +170,17 @@ export interface FraudAlert {
   resolution?: string;
 }
 
-export interface ApiResponse<T> {
+export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
 }
+
 export interface LoginRequest {
   phone: string;
   otp: string;
 }
+
 export interface RegisterRequest {
   name: string;
   phone: string;
@@ -169,6 +195,7 @@ export interface RegisterRequest {
   daysPerWeek?: number;
   experienceMonths?: number;
 }
+
 export interface Payment {
   id: string;
   claimId: string;
@@ -183,6 +210,7 @@ export interface Payment {
   workerName?: string;
   workerPhone?: string;
 }
+
 export interface AdminStats {
   activeEvents: number;
   activePolicies: number;
@@ -200,6 +228,7 @@ export interface AdminStats {
   claimsByStatus: Record<string, number>;
   eventsByType: Record<string, number>;
 }
+
 export interface WeeklyTrend {
   week: string;
   premiums: number;

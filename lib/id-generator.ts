@@ -20,12 +20,15 @@ type EntityType =
  * @param entity - The entity type (worker, policy, etc.)
  * @returns string like "worker_a1b2c3d4"
  */
-export function generateId(entity: EntityType): string {
-  // Take first 8 chars of UUID for readability
-  const shortId = uuidv4().replace(/-/g, '').substring(0, 12);
-  return `${entity}_${shortId}`;
-}
+export const generateId = (prefix: string): string => {
+  const random = Math.random().toString(36).substring(2, 6);
+  return `${prefix}_${Date.now()}_${random}`;
+};
 
+export const generatePaymentId = (): string => {
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `TXN_${Date.now()}_${random}`;
+};
 /**
  * Generate a mock UPI transaction ID
  * @returns string like "TXN202401150001"
