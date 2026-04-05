@@ -1,112 +1,191 @@
 'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Home, FileText, Map, User, Shield } from 'lucide-react';
 
-import React from 'react';
-import { DollarSign, ShieldCheck, FileText, TrendingUp } from 'lucide-react';
-import { useWindowSize } from '@/components/hooks/useWindowSize';
-import { workerData } from '@/lib/data';
-import StatCard from '@/components/shared/StatCard';
+const MOCK = {
+  worker: { id: 'worker_0001', name: 'Amit Kumar', primaryZoneId: 'zone_003' },
+  activePolicy: { id: 'policy_0001', weekStart: '2025-01-13', weekEnd: '2025-01-19', finalPremium: 99, coveragePercentage: 75, maxDailyPayout: 600, maxWeeklyPayouts: 3, maxMonthlyPayouts: 8, status: 'active' },
+  currentWeather: { temperature: 32, rainfall: 5, aqi: 145, weatherCondition: 'Partly Cloudy' },
+  recentClaims: [
+    { id: 'claim_001', claimDate: '2025-01-14', eventType: 'heavy_rain', severityTier: 'T2', approvedPayout: 213, status: 'paid' },
+    { id: 'claim_002', claimDate: '2025-01-10', eventType: 'pollution', severityTier: 'T2', approvedPayout: 189, status: 'paid' },
+    { id: 'claim_003', claimDate: '2025-01-03', eventType: 'storm', severityTier: 'T3', approvedPayout: 359, status: 'paid' },
+  ],
+  stats: { totalPayouts: 1247, claimsThisWeek: 1, claimsThisMonth: 2, earningsProtected: 94 }
+};
 
-export default function WorkerDashboardPage() {
-  const { isMobile, isTablet } = useWindowSize();
+export default function WorkerDashboard() {
+  const router = useRouter();
+  const [data, setData] = useState(MOCK);
+
+  useEffect(() => {
+    const workerId = localStorage.getItem('workerId') || 'worker_0001';
+    fetch(`/api/worker/dashboard/${workerId}`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setData(d.data); })
+      .catch(() => {});
+  }, []);
+
+  const statusBadge = (status: string) => {
+    const map: Record<string, string> = {
+      paid: 'bg-green-100 text-green-800',
+      processing: 'bg-yellow-100 text-yellow-800',
+      manual_review: 'bg-orange-100 text-orange-800',
+      denied: 'bg-red-100 text-red-800',
+    };
+    return <Badge className={map[status] || map.processing}>{status.replace('_', ' ').toUpperCase()}</Badge>;
+  };
 
   return (
-    <>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
-        <h1 style={{ fontSize: isMobile ? '1.4rem' : '1.8rem', color: '#1a1a1a', fontWeight: 700 }}>Worker Dashboard</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {!isMobile && <span style={{ color: '#64748b', fontSize: '14px' }}>Welcome, Rajesh Kumar</span>}
-          <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'white', fontSize: '14px' }}>RK</div>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      <div className="max-w-md mx-auto px-4 py-4">
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-slate-500 text-sm">👋 Hi {data.worker?.name}</p>
+            <p className="text-xs text-slate-400">Zone: {data.worker?.primaryZoneId}</p>
+          </div>
+          <Shield className="text-blue-600" size={28} />
         </div>
+
+        {/* STAT CARDS */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {[
+            { label: 'Policy', value: data.activePolicy ? '✓ Active' : 'None', color: 'text-green-600' },
+            { label: 'Claims', value: `${data.stats?.claimsThisWeek || 0}/3 wk`, color: 'text-blue-600' },
+            { label: 'Payouts', value: `₹${data.stats?.totalPayouts || 0}`, color: 'text-purple-600' },
+            { label: 'Premium', value: `₹${data.activePolicy?.finalPremium || 0}/wk`, color: 'text-slate-800' },
+          ].map((s) => (
+            <Card key={s.label} className="p-4">
+              <p className="text-xs text-slate-500">{s.label}</p>
+              <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+            </Card>
+          ))}
+        </div>
+
+        {/* CURRENT CONDITIONS */}
+        <Card className="p-4 mb-4 bg-blue-50 border border-blue-200">
+          <p className="text-xs font-bold text-blue-700 mb-2">CURRENT CONDITIONS</p>
+          <div className="flex gap-4 text-sm text-slate-700">
+            <span>🌡️ {data.currentWeather?.temperature}°C</span>
+            <span>🌧️ {data.currentWeather?.rainfall}mm</span>
+            <span>💨 AQI {data.currentWeather?.aqi}</span>
+          </div>
+          {data.currentWeather?.aqi > 100 && (
+            <p className="text-xs text-amber-700 mt-2">⚠ High AQI — covered by your policy!</p>
+          )}
+        </Card>
+
+        {/* ACTIVE POLICY */}
+        {data.activePolicy ? (
+          <Card className="p-4 mb-4 border border-green-200 bg-green-50">
+            <p className="text-xs font-bold text-green-700 mb-2">ACTIVE POLICY</p>
+            <p className="text-sm font-semibold text-slate-800">
+              #{data.activePolicy.id}
+            </p>
+            <p className="text-xs text-slate-500">
+              {data.activePolicy.weekStart} → {data.activePolicy.weekEnd}
+            </p>
+            <div className="flex justify-between mt-2 text-xs text-slate-600">
+              <span>Coverage: {data.activePolicy.coveragePercentage}%</span>
+              <span>Max: ₹{data.activePolicy.maxDailyPayout}/day</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Claims: {data.stats?.claimsThisWeek}/3 week | {data.stats?.claimsThisMonth}/8 month
+            </p>
+            <div className="flex gap-2 mt-3">
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs">Renew</Button>
+              <Button size="sm" variant="outline" className="text-xs">Details</Button>
+            </div>
+          </Card>
+        ) : (
+          <Card className="p-6 mb-4 border-2 border-dashed border-blue-300 text-center">
+            <p className="text-slate-600 mb-3">No active policy yet</p>
+            <Link href="/worker/buy-policy">
+              <Button className="bg-blue-600 hover:bg-blue-700">Buy Policy Now</Button>
+            </Link>
+          </Card>
+        )}
+
+        {/* RECENT CLAIMS */}
+        <Card className="p-4 mb-4">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm font-bold text-slate-800">Recent Claims</p>
+            <Link href="/worker/claims">
+              <span className="text-xs text-blue-600 cursor-pointer">View All →</span>
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {(data.recentClaims || []).slice(0, 3).map((c: any) => (
+              <div key={c.id} className="flex justify-between items-center py-2 border-b last:border-0 text-sm">
+                <div>
+                  <p className="font-semibold capitalize text-slate-700">
+                    {c.eventType.replace('_', ' ')}
+                  </p>
+                  <p className="text-xs text-slate-400">{c.claimDate} · {c.severityTier}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-green-600">₹{c.approvedPayout}</p>
+                  {statusBadge(c.status)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* EARNINGS PROTECTION */}
+        <Card className="p-4">
+          <p className="text-sm font-bold text-slate-800 mb-3">Earnings Protection</p>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Normal income:</span>
+              <span className="font-semibold">₹16,500</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Lost to events:</span>
+              <span className="font-semibold text-red-500">-₹2,250</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">GigShield payouts:</span>
+              <span className="font-semibold text-green-600">+₹{data.stats?.totalPayouts}</span>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-slate-500 mb-1">
+              <span>Protected</span>
+              <span>{data.stats?.earningsProtected}%</span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 rounded-full">
+              <div
+                className="h-full bg-green-500 rounded-full"
+                style={{ width: `${data.stats?.earningsProtected || 0}%` }}
+              />
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: '15px', marginBottom: '25px' }}>
-        <StatCard icon={DollarSign} iconBg="#dbeafe" iconColor="#2563eb" label="Total Earnings (Last 15-months)" value={workerData.totalEarnings} />
-        <StatCard icon={ShieldCheck} iconBg="#dcfce7" iconColor="#16a34a" label="Coverage Status" value={workerData.coverageStatus} valueColor="#16a34a" />
-        <StatCard icon={FileText} iconBg="#fef3c7" iconColor="#ca8a04" label="Total Claims" value={workerData.totalClaims} />
-        <StatCard icon={TrendingUp} iconBg="#fce7f3" iconColor="#db2777" label="Protection %" value={`${workerData.protectionPercent}%`} />
-      </div>
-
-      {/* Active Plan Card */}
-      <div style={{ background: 'white', padding: isMobile ? '20px' : '25px', borderRadius: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '18px', color: '#1a1a1a', fontWeight: 700 }}>🛡️ Active Plan</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '15px' }}>
-          <div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>Plan Type</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#1a1a1a' }}>{workerData.activePlan.type}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>Premium</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2563eb' }}>{workerData.activePlan.premium}/week</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>Coverage</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#16a34a' }}>{workerData.activePlan.coverage}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>Valid Until</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#1a1a1a' }}>{workerData.activePlan.validUntil}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Income Protection Tracker */}
-      <div style={{ background: 'white', padding: isMobile ? '20px' : '25px', borderRadius: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '18px', color: '#1a1a1a', fontWeight: 700 }}>💰 Income Protection Tracker</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '15px', marginBottom: '18px' }}>
-          <div style={{ textAlign: 'center', padding: '18px', background: '#fef2f2', borderRadius: '12px' }}>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '6px' }}>Total Income Lost</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#dc2626' }}>{workerData.incomeProtection.totalLost}</div>
-          </div>
-          <div style={{ textAlign: 'center', padding: '18px', background: '#f0fdf4', borderRadius: '12px' }}>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '6px' }}>Amount Recovered</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#16a34a' }}>{workerData.incomeProtection.recovered}</div>
-          </div>
-          <div style={{ textAlign: 'center', padding: '18px', background: '#eff6ff', borderRadius: '12px' }}>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '6px' }}>Protection Rate</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#2563eb' }}>{workerData.incomeProtection.protectionRate}%</div>
-          </div>
-        </div>
-        <div style={{ height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${workerData.incomeProtection.protectionRate}%`, background: 'linear-gradient(90deg, #16a34a, #22c55e)', borderRadius: '5px', transition: 'width 1s ease' }}></div>
-        </div>
-      </div>
-
-      {/* Recent Claims */}
-      <div style={{ background: 'white', padding: isMobile ? '20px' : '25px', borderRadius: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '18px', color: '#1a1a1a', fontWeight: 700 }}>📋 Recent Claims</h3>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Claim ID</th>
-                <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Event</th>
-                <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Amount</th>
-                <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workerData.recentClaims.map((claim, index) => (
-                <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '12px', fontWeight: 600, color: '#1a1a1a', fontSize: '0.9rem' }}>{claim.id}</td>
-                  <td style={{ padding: '12px', color: '#4a5568', fontSize: '0.9rem' }}>{claim.event}</td>
-                  <td style={{ padding: '12px', fontWeight: 700, color: '#16a34a', fontSize: '0.9rem' }}>{claim.amount}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{
-                      padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600,
-                      background: claim.status === 'Approved' ? '#dcfce7' : claim.status === 'Processing' ? '#fef3c7' : '#fee2e2',
-                      color: claim.status === 'Approved' ? '#16a34a' : claim.status === 'Processing' ? '#ca8a04' : '#dc2626'
-                    }}>
-                      {claim.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
+      {/* BOTTOM NAV */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t h-16 flex items-center justify-around max-w-md mx-auto">
+        {[
+          { icon: Home, label: 'Home', href: '/worker/dashboard', active: true },
+          { icon: FileText, label: 'Claims', href: '/worker/claims', active: false },
+          { icon: Map, label: 'Map', href: '/admin/map', active: false },
+          { icon: User, label: 'Profile', href: '/worker/profile', active: false },
+        ].map((item) => (
+          <Link key={item.label} href={item.href}>
+            <div className={`flex flex-col items-center gap-1 ${item.active ? 'text-blue-600' : 'text-slate-400'}`}>
+              <item.icon size={20} />
+              <span className="text-xs">{item.label}</span>
+            </div>
+          </Link>
+        ))}
+      </nav>
+    </div>
   );
 }
