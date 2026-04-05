@@ -11,15 +11,14 @@ function estimateDuration(severityTier: 'T1' | 'T2' | 'T3' | 'T4') {
     T4: 8,
   }[severityTier];
 }
-
-function countClaimsThisWeek(workerId: string) {
-  const claims = readData<any>('claims.json').filter((c) => c.workerId === workerId);
-  return claims.length;
+async function countClaimsThisWeek(workerId: string) {
+  const claims = await readData<any>('claims.json');
+  return claims.filter((c) => c.workerId === workerId).length;
 }
 
-function countClaimsThisMonth(workerId: string) {
-  const claims = readData<any>('claims.json').filter((c) => c.workerId === workerId);
-  return claims.length;
+async function countClaimsThisMonth(workerId: string) {
+  const claims = await readData<any>('claims.json');
+  return claims.filter((c) => c.workerId === workerId).length;
 }
 
 async function getPayout(payload: any) {
@@ -93,7 +92,7 @@ export async function runAutoTrigger(
   const createdEvents = [];
 
   for (const disruption of detected) {
-    const zone = findById<any>('zones.json', zoneId || weather.zoneId);
+    const zone = await findById<any>('zones.json', zoneId || weather.zoneId);
 
     const event = {
       id: generateId('event'),
@@ -116,8 +115,8 @@ export async function runAutoTrigger(
 
     appendData('events.json', event);
 
-    const allPolicies = readData<any>('policies.json');
-    const allWorkers = readData<any>('workers.json');
+    const allPolicies =await  readData<any>('policies.json');
+    const allWorkers = await readData<any>('workers.json');
 
     const activePolicies = allPolicies.filter(
       (p) =>

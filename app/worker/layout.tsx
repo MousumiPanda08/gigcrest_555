@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css";
+// CORRECT - goes up one level to app/ folder
+
 
 export const metadata: Metadata = {
   title: "GigCrest",

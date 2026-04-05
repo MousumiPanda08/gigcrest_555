@@ -9,7 +9,7 @@ import type { Claim } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const claims = readData<Claim>("claims.json");
+    const claims =await readData<Claim>("claims.json");
 
     const { searchParams } = new URL(request.url);
     const workerId = searchParams.get("workerId");
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     let filtered = claims;
 
-    if (workerId) filtered = filtered.filter((c) => c.workerId === workerId);
+    if (workerId) filtered =filtered.filter((c) => c.workerId === workerId);
     if (status) filtered = filtered.filter((c) => String(c.status) === status);
     if (eventId) filtered = filtered.filter((c) => c.eventId === eventId);
 

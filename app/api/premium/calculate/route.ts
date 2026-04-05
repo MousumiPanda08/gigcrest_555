@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { workerId, zoneId } = body;
 
-    const workers = readData<Worker>("workers.json");
-    const zones = readData<Zone>("zones.json");
+    const workers = await readData<Worker>("workers.json");
+    const zones = await readData<Zone>("zones.json");
 
     const worker = workers.find((w) => w.id === workerId);
     const zone = zones.find((z) => z.id === zoneId);

@@ -1,11 +1,17 @@
-// components/worker/ClaimCard.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CloudRain, Thermometer, Cloud, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
-import { Claim } from '@/types';
+import {
+  CloudRain,
+  Thermometer,
+  Cloud,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
+import type { Claim } from '@/types';
 
 interface ClaimCardProps {
   claim: Claim;
@@ -29,30 +35,33 @@ const getEventIcon = (eventType: string) => {
 
 const getEventLabel = (eventType: string) => {
   const labels: Record<string, string> = {
-    'heavy_rain': 'Heavy Rain',
-    'rain': 'Rain',
-    'extreme_heat': 'Heatwave',
-    'heat': 'Heat',
-    'pollution': 'Poor AQI',
-    'aqi': 'Poor AQI',
-    'flood': 'Flood',
-    'strike': 'Strike',
-    'curfew': 'Curfew'
+    heavy_rain: 'Heavy Rain',
+    rain: 'Rain',
+    extreme_heat: 'Heatwave',
+    heat: 'Heat',
+    pollution: 'Poor AQI',
+    aqi: 'Poor AQI',
+    flood: 'Flood',
+    strike: 'Strike',
+    curfew: 'Curfew'
   };
+
   return labels[eventType.toLowerCase()] || eventType;
 };
 
 const getStatusBadge = (status: string) => {
   const configs: Record<string, { bg: string; text: string; label: string }> = {
-    'paid': { bg: 'bg-green-100', text: 'text-green-800', label: '✓ Paid' },
-    'auto_approved': { bg: 'bg-green-100', text: 'text-green-800', label: '✓ Approved' },
-    'approved': { bg: 'bg-green-100', text: 'text-green-800', label: '✓ Approved' },
-    'manual_review': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '⏳ Processing' },
-    'denied': { bg: 'bg-red-100', text: 'text-red-800', label: '✗ Denied' }
+    paid: { bg: 'bg-green-100', text: 'text-green-800', label: '✓ Paid' },
+    auto_approved: { bg: 'bg-green-100', text: 'text-green-800', label: '✓ Approved' },
+    approved: { bg: 'bg-green-100', text: 'text-green-800', label: '✓ Approved' },
+    manual_review: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '⏳ Processing' },
+    under_review: { bg: 'bg-orange-100', text: 'text-orange-800', label: '🟠 In Review' },
+    denied: { bg: 'bg-red-100', text: 'text-red-800', label: '✗ Denied' },
+    pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pending' }
   };
-  
-  const config = configs[status] || configs['manual_review'];
-  
+
+  const config = configs[status] || configs.pending;
+
   return (
     <Badge className={`${config.bg} ${config.text} text-xs font-semibold`}>
       {config.label}
@@ -62,9 +71,12 @@ const getStatusBadge = (status: string) => {
 
 export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
   const [expanded, setExpanded] = useState(false);
-  const EventIcon = getEventIcon(claim.eventType);
-  
-  const formatDate = (dateStr: string) => {
+  const eventType = String(claim.eventType);
+  const status = String(claim.status);
+  const EventIcon = getEventIcon(eventType);
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '--';
     return new Date(dateStr).toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
@@ -72,7 +84,8 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
     });
   };
 
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr?: string) => {
+    if (!dateStr) return '--';
     return new Date(dateStr).toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit'
@@ -82,26 +95,40 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
   return (
     <Card className="mb-3 overflow-hidden">
       <button
+        type="button"
         onClick={() => setExpanded(!expanded)}
         className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3 flex-1">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-            claim.severityTier === 'T4' ? 'bg-red-100' :
-            claim.severityTier === 'T3' ? 'bg-orange-100' :
-            claim.severityTier === 'T2' ? 'bg-yellow-100' : 'bg-green-100'
-          }`}>
-            <EventIcon size={18} className={
-              claim.severityTier === 'T4' ? 'text-red-600' :
-              claim.severityTier === 'T3' ? 'text-orange-600' :
-              claim.severityTier === 'T2' ? 'text-yellow-600' : 'text-green-600'
-            } />
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+              claim.severityTier === 'T4'
+                ? 'bg-red-100'
+                : claim.severityTier === 'T3'
+                ? 'bg-orange-100'
+                : claim.severityTier === 'T2'
+                ? 'bg-yellow-100'
+                : 'bg-green-100'
+            }`}
+          >
+            <EventIcon
+              size={18}
+              className={
+                claim.severityTier === 'T4'
+                  ? 'text-red-600'
+                  : claim.severityTier === 'T3'
+                  ? 'text-orange-600'
+                  : claim.severityTier === 'T2'
+                  ? 'text-yellow-600'
+                  : 'text-green-600'
+              }
+            />
           </div>
-          
+
           <div className="flex-1 text-left">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-bold text-gray-900">
-                {getEventLabel(claim.eventType)}
+                {getEventLabel(eventType)}
               </span>
               <Badge variant="outline" className="text-xs">
                 {claim.severityTier}
@@ -109,15 +136,15 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
             </div>
             <div className="text-xs text-gray-500">{formatDate(claim.claimDate)}</div>
           </div>
-          
+
           <div className="text-right">
             <div className="text-lg font-bold text-green-600">
               ₹{claim.approvedPayout}
             </div>
-            {getStatusBadge(claim.status)}
+            {getStatusBadge(status)}
           </div>
         </div>
-        
+
         {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
       </button>
 
@@ -134,32 +161,42 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
             </div>
             <div>
               <div className="text-xs text-gray-500 mb-1">Hours Affected</div>
-              <div className="text-sm font-bold text-gray-900">{claim.hoursAffected}h</div>
+              <div className="text-sm font-bold text-gray-900">
+                {claim.hoursAffected ?? 0}h
+              </div>
             </div>
             <div>
               <div className="text-xs text-gray-500 mb-1">Coverage</div>
-              <div className="text-sm font-bold text-gray-900">{claim.coveragePercentage}%</div>
+              <div className="text-sm font-bold text-gray-900">
+                {claim.coveragePercentage ?? 0}%
+              </div>
             </div>
           </div>
-          
+
           <div className="mt-3 p-3 bg-white rounded-lg">
             <div className="text-xs font-semibold text-gray-700 mb-2">Payout Breakdown</div>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-600">Base Earning:</span>
-                <span className="font-semibold">₹{claim.dailyEarningBasis}</span>
+                <span className="font-semibold">₹{claim.dailyEarningBasis ?? 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Coverage ({claim.coveragePercentage}%):</span>
-                <span className="font-semibold">₹{Math.round(claim.dailyEarningBasis * claim.coveragePercentage / 100)}</span>
+                <span className="text-gray-600">
+                  Coverage ({claim.coveragePercentage ?? 0}%):
+                </span>
+                <span className="font-semibold">
+                  ₹{Math.round(((claim.dailyEarningBasis ?? 0) * (claim.coveragePercentage ?? 0)) / 100)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Severity ({claim.severityTier}):</span>
-                <span className="font-semibold">×{claim.severityFactor}</span>
+                <span className="font-semibold">×{claim.severityFactor ?? 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Hours Ratio:</span>
-                <span className="font-semibold">{(claim.hoursRatio * 100).toFixed(0)}%</span>
+                <span className="font-semibold">
+                  {(((claim.hoursRatio ?? 0) * 100)).toFixed(0)}%
+                </span>
               </div>
               <div className="border-t border-gray-200 pt-1 mt-2 flex justify-between">
                 <span className="font-bold text-gray-900">Final Payout:</span>
@@ -167,7 +204,7 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
               </div>
             </div>
           </div>
-          
+
           {claim.fraudScore > 0 && (
             <div className="mt-3 p-3 bg-white rounded-lg border border-gray-200">
               <div className="text-xs font-semibold text-gray-700 mb-1">Verification</div>
@@ -184,9 +221,21 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
                   </>
                 )}
               </div>
+
+              {Array.isArray(claim.fraudFlags) && claim.fraudFlags.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {claim.fraudFlags.map((flag, index) => (
+                    <div key={index} className="text-xs text-gray-600">
+                      {typeof flag === 'string'
+                        ? flag
+                        : `${flag.description}${flag.score ? ` (+${flag.score})` : ''}`}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
-          
+
           {claim.paymentId && (
             <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
               <div className="text-xs text-gray-500 mb-1">Payment ID</div>
@@ -203,3 +252,5 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({ claim }) => {
     </Card>
   );
 };
+
+export default ClaimCard;

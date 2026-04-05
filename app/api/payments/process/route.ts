@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const claim = findById<Claim>("claims.json", claimId);
+    const claim = await findById<Claim>("claims.json", claimId);
     if (!claim) {
       return NextResponse.json(
         { success: false, error: "Claim not found" },
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const worker = findById<Worker>("workers.json", claim.workerId);
+    const worker = await findById<Worker>("workers.json", claim.workerId);
     const now = new Date().toISOString();
 
     const resolvedUpi =

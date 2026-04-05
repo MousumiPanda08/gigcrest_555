@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (existsByField<Worker>("workers.json", "phone", phone)) {
+    if (await existsByField<Worker>("workers.json", "phone", phone)) {
       return NextResponse.json(
         { success: false, error: "Phone number already registered" },
         { status: 409 }
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       isActive: true,
     };
 
-    appendData("workers.json", newWorker);
+    await appendData("workers.json", newWorker);
 
     const token = await generateToken({
       workerId,

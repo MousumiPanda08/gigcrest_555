@@ -5,20 +5,24 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, User, Calendar, MapPin, DollarSign, Shield, AlertTriangle } from 'lucide-react';
+import { X, User, Calendar, DollarSign, Shield } from 'lucide-react';
 import { Claim } from '@/types';
+
 const getFraudBarColor = (score: number) => {
   if (score <= 20) return 'bg-green-500';
   if (score <= 45) return 'bg-yellow-500';
   if (score <= 70) return 'bg-orange-500';
   return 'bg-red-500';
 };
+
 interface ClaimDetailModalProps {
   claim: Claim | null;
   onClose: () => void;
 }
 
+
 export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClose }) => {
+  // 🛡️ SAFETY CHECK: If no claim, don't render
   if (!claim) return null;
 
   const formatDate = (dateStr: string) => {
@@ -39,9 +43,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
       'manual_review': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
       'denied': { bg: 'bg-red-100', text: 'text-red-800' }
     };
-    
     const config = configs[status] || configs['manual_review'];
-    
     return (
       <Badge className={`${config.bg} ${config.text} font-bold`}>
         {status.replace('_', ' ').toUpperCase()}
@@ -56,7 +58,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
     return { label: 'Critical Risk', color: 'text-red-600', bg: 'bg-red-50' };
   };
 
-  const fraudLevel = getFraudLevel(claim.fraudScore);
+  const fraudLevel = getFraudLevel(claim.fraudScore || 0);
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -106,7 +108,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
               <div>
                 <span className="text-gray-500">Type:</span>
                 <span className="ml-2 font-semibold text-gray-900 capitalize">
-                  {claim.eventType.replace('_', ' ')}
+                  {claim.eventType?.replace('_', ' ')}
                 </span>
               </div>
               <div>
@@ -145,7 +147,9 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Hours Affected:</span>
-                <span className="font-semibold">{claim.hoursAffected}h ({(claim.hoursRatio * 100).toFixed(0)}%)</span>
+               <span className="font-semibold">
+  {claim.hoursAffected ?? 0}h ({((claim.hoursRatio ?? 0) * 100).toFixed(0)}%)
+</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-blue-200">
                 <span className="text-gray-600">Calculated Payout:</span>
@@ -166,19 +170,20 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
             </div>
             
             <div className="flex items-center justify-between mb-3">
-  <span className="text-sm font-semibold text-gray-700">Risk Score</span>
-  <div className="flex items-center gap-2">
-    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-      <div
-        className={`h-full ${getFraudBarColor(claim.fraudScore)} transition-all`}
-        style={{ width: `${claim.fraudScore}%` }}
-      ></div>
-    </div>
-    <span className={`text-lg font-bold ${fraudLevel.color}`}>
-      {claim.fraudScore}/100
-    </span>
-  </div>
-</div>
+              <span className="text-sm font-semibold text-gray-700">Risk Score</span>
+              <div className="flex items-center gap-2">
+                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${getFraudBarColor(claim.fraudScore || 0)} transition-all`}
+                    style={{ width: `${claim.fraudScore || 0}%` }}
+                  ></div>
+                </div>
+                <span className={`text-lg font-bold ${fraudLevel.color}`}>
+                  {claim.fraudScore || 0}/100
+                </span>
+              </div>
+            </div>
+
             <div className="bg-white p-3 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-gray-700">Assessment:</span>
@@ -192,8 +197,8 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
                   {claim.fraudFlags.map((flag, idx) => (
                     <div key={idx} className="text-xs text-gray-700 flex items-start gap-2">
                       <span className="text-orange-500">•</span>
-                      <span className="flex-1">{flag.description}</span>
-                      <span className="font-semibold">+{flag.score}</span>
+                      <span className="flex-1">{flag.description || 'Unknown issue'}</span>
+<span className="font-semibold">+{flag.score ?? 0}</span>
                     </div>
                   ))}
                 </div>
@@ -229,23 +234,6 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({ claim, onClo
               </div>
             </div>
           )}
-
-          {/* Policy Info */}
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <div className="text-xs font-semibold text-gray-700 mb-2">Policy Information</div>
-            <div className="text-sm">
-              <span className="text-gray-600">Policy ID:</span>
-              <span className="ml-2 font-mono font-semibold text-purple-700">{claim.policyId}</span>
-            </div>
-          </div>
-
-          {/* Timestamps */}
-          <div className="text-xs text-gray-500 pt-3 border-t">
-            <div className="flex justify-between">
-              <span>Created:</span>
-              <span className="font-semibold">{formatDate(claim.createdAt)}</span>
-            </div>
-          </div>
         </div>
       </Card>
     </div>

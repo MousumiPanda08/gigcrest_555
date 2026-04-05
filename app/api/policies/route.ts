@@ -9,7 +9,7 @@ import { startOfWeek, endOfWeek, format } from "date-fns";
 
 export async function GET(request: NextRequest) {
   try {
-    const policies = readData<Policy>("policies.json");
+    const policies = await readData<Policy>("policies.json");
 
     const { searchParams } = new URL(request.url);
     const workerId = searchParams.get("workerId");
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const worker = findById<Worker>("workers.json", workerId);
+    const worker = await findById<Worker>("workers.json", workerId);
     if (!worker) {
       return NextResponse.json(
         { success: false, error: "Worker not found" },
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const zone = findById<Zone>("zones.json", zoneId);
+    const zone = await findById<Zone>("zones.json", zoneId);
     if (!zone) {
       return NextResponse.json(
         { success: false, error: "Zone not found" },
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existingPolicies = readData<Policy>("policies.json");
+    const existingPolicies = await readData<Policy>("policies.json");
     const hasActive = existingPolicies.some(
       (p) => p.workerId === workerId && p.status === "active"
     );

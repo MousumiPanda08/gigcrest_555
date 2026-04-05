@@ -3,7 +3,7 @@ import { readData } from '@/lib/db';
 
 export async function GET() {
   try {
-    const weather = readData<any>('weather.json');
+    const weather =await readData<any>('weather.json');
 
     const latestByZone = Object.values(
       weather.reduce((acc: Record<string, any>, item: any) => {

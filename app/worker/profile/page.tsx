@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useWindowSize } from '@/hooks/useWindowSize';
+import { useWindowSize } from '@/components/hooks/useWindowSize';
 
 export default function ProfilePage() {
   const { isMobile } = useWindowSize();

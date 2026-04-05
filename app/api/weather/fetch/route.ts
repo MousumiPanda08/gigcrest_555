@@ -4,7 +4,7 @@ import { fetchWeatherForAllZones } from '@/lib/weather-service';
 
 export async function POST() {
   try {
-    const zones = readData<any>('zones.json');
+    const zones = await readData<any>('zones.json');
     const weatherList = await fetchWeatherForAllZones(zones);
 
     for (const weather of weatherList) {

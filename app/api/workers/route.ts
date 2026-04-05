@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { readData, appendData, existsByField } from '@/lib/db';
 import { generateId } from '@/lib/id-generator';
@@ -6,7 +7,7 @@ import type { Worker, ApiResponse } from '@/types';
 // GET — List workers
 export async function GET(request: NextRequest) {
   try {
-    const workers = readData<Worker>('workers.json');
+    const workers =await readData<Worker>('workers.json');
 
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city');
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (existsByField<Worker>('workers.json', 'phone', phone)) {
+    if (await existsByField<Worker>('workers.json', 'phone', phone)) {
       return NextResponse.json(
         { success: false, error: 'Phone number already exists' },
         { status: 409 }

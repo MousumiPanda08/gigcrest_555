@@ -1,8 +1,9 @@
-// app/api/events/simulate/route.ts
+// app/api/... (simulate event route)
+
 import { NextRequest, NextResponse } from 'next/server';
 import { readData, appendData, updateById } from '@/lib/db';
 import { generateId, generatePaymentId } from '@/lib/id-generator';
-import { Zone, Worker, Policy, Claim, DisruptionEvent, WeatherData, ApiResponse } from '@/types';
+import type { Zone, Worker, Policy, Claim, DisruptionEvent, WeatherData, ApiResponse } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,16 +14,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'zoneId, eventType, and severityTier are required'
-      } as ApiResponse, { status: 400 });
+      } as ApiResponse<any>, { status: 400 });
     }
 
     // Get zone info
-    const zone = readData<Zone>('zones.json').find(z => z.id === zoneId);
+    const zones = await readData<Zone>('zones.json');
+    const zone = zones.find(z => z.id === zoneId);
     if (!zone) {
       return NextResponse.json({
         success: false,
         error: 'Zone not found'
-      } as ApiResponse, { status: 404 });
+      } as ApiResponse<any>, { status: 404 });
     }
 
     // Generate simulated weather
@@ -46,15 +48,16 @@ export async function POST(request: NextRequest) {
 
     // Save weather data
     const weather: WeatherData = {
-      id: `weather_${zoneId}_${Date.now()}`,
       zoneId,
       timestamp: new Date().toISOString(),
-      ...weatherData,
+      temperature: weatherData.temperature,
+      rainfall: weatherData.rainfall,
+      aqi: weatherData.aqi,
+      windSpeed: weatherData.windSpeed,
       visibility: 1 + Math.random() * 8,
-      weatherCondition: eventType.includes('rain') ? 'Heavy Rain' : eventType.includes('heat') ? 'Extreme Heat' : 'Hazardous',
       source: 'simulation'
     };
-    appendData('weather.json', weather);
+    await appendData('weather.json', weather);
 
     // Create disruption event
     const durationHours = severityTier === 'T4' ? 8 : severityTier === 'T3' ? 6 : severityTier === 'T2' ? 4 : 2;
@@ -81,11 +84,11 @@ export async function POST(request: NextRequest) {
       totalPayoutAmount: 0,
       createdAt: new Date().toISOString()
     };
-    appendData('events.json', event);
+    await appendData('events.json', event);
 
-    // Find affected workers
-    const allWorkers = readData<Worker>('workers.json');
-    const allPolicies = readData<Policy>('policies.json');
+    // Find affected workers and policies
+    const allWorkers = await readData<Worker>('workers.json');
+    const allPolicies = await readData<Policy>('policies.json');
     
     const zoneWorkers = allWorkers.filter(w => w.primaryZoneId === zoneId);
     const activePolicies = allPolicies.filter(p => 
@@ -106,7 +109,7 @@ export async function POST(request: NextRequest) {
 
       // Calculate payout
       const hoursAffected = durationHours;
-      const hoursRatio = Math.min(hoursAffected / worker.avgHoursPerDay, 1);
+      const hoursRatio = Math.min(hoursAffected / (worker.hoursPerDay || 8), 1);
       const calculatedPayout = Math.round(
         worker.avgDailyEarning * 
         (policy.coveragePercentage / 100) * 
@@ -119,10 +122,7 @@ export async function POST(request: NextRequest) {
       const fraudScore = Math.floor(Math.random() * 80);
       
       let status: Claim['status'];
-      if (fraudScore <= 20) {
-        status = 'auto_approved';
-        autoApproved++;
-      } else if (fraudScore <= 45) {
+      if (fraudScore <= 45) {
         status = 'auto_approved';
         autoApproved++;
       } else if (fraudScore <= 70) {
@@ -153,20 +153,19 @@ export async function POST(request: NextRequest) {
         fraudFlags: [],
         status,
         paymentStatus: status === 'auto_approved' ? 'completed' : 'pending',
-        paymentId: status === 'auto_approved' ? generatePaymentId() : null,
-        paidAt: status === 'auto_approved' ? new Date().toISOString() : null,
+        paymentId: status === 'auto_approved' ? generatePaymentId() : undefined,
+        paidAt: status === 'auto_approved' ? new Date().toISOString() : undefined,
         createdAt: new Date().toISOString()
       };
 
-      appendData('claims.json', claim);
+      await appendData('claims.json', claim);
       createdClaims.push(claim);
 
       if (status === 'auto_approved') {
         totalPayout += approvedPayout;
         
-        // Create payment record
-        appendData('payments.json', {
-          id: claim.paymentId,
+        await appendData('payments.json', {
+          id: claim.paymentId!,
           claimId: claim.id,
           workerId: worker.id,
           amount: approvedPayout,
@@ -174,9 +173,56 @@ export async function POST(request: NextRequest) {
           upiId: worker.upiId,
           status: 'completed',
           transactionId: `UPI${Date.now()}${Math.random().toString(36).substr(2, 6)}`,
-          createdAt: claim.createdAt,
+          initiatedAt: claim.createdAt,
           completedAt: claim.paidAt
         });
       }
 
-      // Create fraud alert if
+      // Create fraud alert if score > 45
+      if (fraudScore > 45) {
+        await appendData('fraud_alerts.json', {
+          id: generateId('fraud_alert'),
+          workerId: worker.id,
+          claimId: claim.id,
+          alertType: fraudScore > 70 ? 'abnormal_pattern' : 'location_anomaly',
+          severity: fraudScore > 70 ? 'critical' : 'high',
+          confidence: fraudScore,
+          details: [
+            `System detected elevated risk score (${fraudScore}/100)`,
+            `Requires manual verification`
+          ],
+          status: 'open',
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
+    // Update the event record with actual totals
+    await updateById<DisruptionEvent>('events.json', event.id, {
+      claimsGenerated: createdClaims.length,
+      totalPayoutAmount: totalPayout
+    });
+
+    // Return the summary
+    return NextResponse.json({
+      success: true,
+      data: {
+        event,
+        summary: {
+          totalClaims: createdClaims.length,
+          autoApproved,
+          manualReview,
+          denied,
+          totalPayout
+        }
+      }
+    } as ApiResponse<any>);
+    
+  } catch (error) {
+    console.error('Simulate event error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to simulate event'
+    } as ApiResponse<any>, { status: 500 });
+  }
+}

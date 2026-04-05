@@ -1,7 +1,3 @@
-// app/api/admin/stats/route.ts
-// GET /api/admin/stats — Full admin dashboard aggregation
-// This is the MOST COMPLEX API — reads from ALL data files
-
 import { NextResponse } from 'next/server';
 import { readData } from '@/lib/db';
 import {
@@ -19,14 +15,14 @@ import { startOfWeek, subWeeks, format } from 'date-fns';
 
 export async function GET() {
   try {
-    // Read all data files
-    const workers = readData<Worker>('workers.json');
-    const zones = readData<Zone>('zones.json');
-    const policies = readData<Policy>('policies.json');
-    const claims = readData<Claim>('claims.json');
-    const events = readData<WeatherEvent>('events.json');
-    const fraudAlerts = readData<FraudAlert>('fraud_alerts.json');
-    const payments = readData<Payment>('payments.json');
+    // Read all data files (now async)
+    const workers = await readData<Worker>('workers.json');
+    const zones = await readData<Zone>('zones.json');
+    const policies = await readData<Policy>('policies.json');
+    const claims = await readData<Claim>('claims.json');
+    const events = await readData<WeatherEvent>('events.json');
+    const fraudAlerts = await readData<FraudAlert>('fraud_alerts.json');
+    const payments = await readData<Payment>('payments.json');
 
     const today = new Date().toISOString().split('T')[0];
     const now = new Date();

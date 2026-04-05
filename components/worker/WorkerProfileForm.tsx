@@ -23,7 +23,7 @@ export const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     avgDailyEarning: worker.avgDailyEarning,
-    avgHoursPerDay: worker.avgHoursPerDay,
+    hoursPerDay: worker.hoursPerDay,
     daysPerWeek: worker.daysPerWeek,
     upiId: worker.upiId,
     primaryZoneId: worker.primaryZoneId
@@ -111,7 +111,7 @@ export const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
             <div>
               <Label className="text-xs text-gray-500">Platform</Label>
               <Input 
-                value={worker.platform} 
+                value={worker.deliveryPlatform}
                 disabled 
                 className="bg-gray-100 text-gray-500 cursor-not-allowed mt-1 capitalize"
               />
@@ -159,14 +159,14 @@ export const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
                 <div>
                   <Label htmlFor="hours" className="text-sm font-medium">Hours/Day</Label>
                   <Input
-                    id="hours"
-                    type="number"
-                    min="2"
-                    max="16"
-                    value={formData.avgHoursPerDay}
-                    onChange={(e) => handleChange('avgHoursPerDay', Number(e.target.value))}
-                    className="mt-1"
-                  />
+  id="hours"
+  type="number"
+  min="2"
+  max="16"
+  value={formData.hoursPerDay}   // ✅ FIXED
+  onChange={(e) => handleChange('hoursPerDay', Number(e.target.value))} // ✅ FIXED
+  className="mt-1"
+/>
                 </div>
                 <div>
                   <Label htmlFor="days" className="text-sm font-medium">Days/Week</Label>

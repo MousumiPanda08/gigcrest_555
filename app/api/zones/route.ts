@@ -7,7 +7,7 @@ import { Zone } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
-    const zones = readData<Zone>('zones.json');
+    const zones =await readData<Zone>('zones.json');
 
     // Optional city filter
     const { searchParams } = new URL(request.url);

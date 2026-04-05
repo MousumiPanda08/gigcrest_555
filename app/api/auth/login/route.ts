@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const workers = readData<Worker>("workers.json");
+    const workers = await readData<Worker>("workers.json");
     const worker = workers.find((w) => w.phone === phone);
 
     if (!worker) {

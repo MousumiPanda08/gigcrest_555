@@ -100,11 +100,11 @@ export interface Claim {
   coveragePercentage: number;
   severityFactor?: number;
   hoursAffected?: number;
-  hoursRatio?: number;
+  hoursRatio: number;
   calculatedPayout: number;
   approvedPayout: number;
   fraudScore: number;
-  fraudFlags: FraudFlag[] | string[];
+  fraudFlags?: FraudFlag[];
   status: ClaimStatus;
   paymentStatus: "pending" | "completed" | "failed";
   paymentId?: string;
