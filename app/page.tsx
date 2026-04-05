@@ -22,16 +22,25 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch claims from your API route
-    // Change the endpoint to match your actual API route (e.g., /api/claims)
     fetch('/api/claims')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
       .then((data) => {
-        setClaims(data.data || data || []);
+        // ✅ BULLETPROOF: Force it to be an array no matter what the API returns
+        const claimsArray = Array.isArray(data?.data) 
+          ? data.data 
+          : Array.isArray(data) 
+            ? data 
+            : [];
+        
+        setClaims(claimsArray);
         setLoading(false);
       })
       .catch((err) => {
         console.error('Failed to fetch claims:', err);
+        setClaims([]); // ✅ Ensure it's an empty array on error
         setLoading(false);
       });
   }, []);

@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {
-    const alerts = await readData("fraud_alerts");
+    const alerts = await readData("fraud_alerts.json");
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const severity = searchParams.get("severity");
