@@ -10,14 +10,20 @@ import {
   Map,
   LogOut,
   Shield,
+  Users,
+  Brain,
+  Activity,
 } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Events', href: '/admin/events', icon: Zap },
   { label: 'Claims', href: '/admin/claims', icon: FileText },
-  { label: 'Fraud', href: '/admin/fraud', icon: AlertTriangle },
-  { label: 'Map', href: '/admin/map', icon: Map },
+  { label: 'Fraud Alerts', href: '/admin/fraud', icon: AlertTriangle },
+  { label: 'Zone Risk Map', href: '/admin/map', icon: Map },
+  { label: 'Workers', href: '/admin/workers', icon: Users },
+  { label: 'AI Engine', href: '/admin/ai', icon: Brain },
+  { label: 'Live Tracking', href: '/admin/live', icon: Activity },
 ];
 
 export default function AdminSidebar() {
@@ -43,7 +49,7 @@ export default function AdminSidebar() {
       </div>
 
       {/* NAV LINKS */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -57,6 +63,14 @@ export default function AdminSidebar() {
               >
                 <item.icon size={18} />
                 <span className="text-sm">{item.label}</span>
+                {item.label === 'Fraud Alerts' && (
+                  <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    !
+                  </span>
+                )}
+                {item.label === 'Live Tracking' && (
+                  <span className="ml-auto w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                )}
               </div>
             </Link>
           );
