@@ -5,6 +5,9 @@ import { Users, ShieldCheck, FileText, DollarSign, AlertTriangle, CloudRain } fr
 import { useWindowSize } from '@/components/hooks/useWindowSize';
 import { adminData } from '@/lib/data';
 import StatCard from '@/components/shared/StatCard';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import LiveStatusCards from '@/components/admin/LiveStatusCards';
+import EventsTable from '@/components/admin/EventsTable';
 
 export default function AdminDashboardPage() {
   const { isMobile, isTablet } = useWindowSize();
